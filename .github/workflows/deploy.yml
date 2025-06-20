@@ -67,7 +67,7 @@ jobs:
       run: |
         # Create a clean deployment package
         mkdir -p deploy
-        cp -r . deploy/
+        rsync -av --exclude=deploy . deploy/
         cd deploy
         
         # Remove unnecessary files for deployment
