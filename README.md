@@ -384,6 +384,34 @@ help                        # Complete guide
 
 #### Common Issues & Solutions
 
+**❌ "Invalid value 'DISABLE_COLLECTSTATIC' for key '1'" Error**
+
+This occurs when Azure Oryx build system receives invalid boolean values.
+
+**Solution:**
+```bash
+# Update App Service configuration
+az webapp config appsettings set --resource-group <your-rg> --name <your-app> \
+  --settings DISABLE_COLLECTSTATIC=true
+
+# Or via Azure Portal:
+# App Service → Configuration → Application Settings
+# Set DISABLE_COLLECTSTATIC = true (not 1 or DISABLE_COLLECTSTATIC)
+```
+
+**Root Cause:** Boolean environment variables must be exactly "true" or "false", not "1" or variable names.
+
+**❌ "Basic Authentication is Disabled" Error**
+
+**Solution:**
+```bash
+# Enable basic auth for deployment
+az webapp config set --resource-group <your-rg> --name <your-app> --basic-auth-enabled true
+az resource update --resource-group <your-rg> --name scm --namespace Microsoft.Web \
+  --resource-type basicPublishingCredentialsPolicies --parent sites/<your-app> \
+  --set properties.allow=true
+```
+
 **❌ GitHub Action Fails**
 - Verify all GitHub secrets are correctly set
 - Check Azure resource names match configuration
