@@ -98,6 +98,18 @@
             {
               "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
               "value": "true"
+            },
+            {
+              "name": "ENABLE_ORYX_BUILD",
+              "value": "true"
+            },
+            {
+              "name": "DISABLE_COLLECTSTATIC",
+              "value": "true"
+            },
+            {
+              "name": "PYTHON_ENABLE_GUNICORN_MULTIWORKERS",
+              "value": "true"
             }
           ]
         }
@@ -108,12 +120,35 @@
       "apiVersion": "2022-03-01",
       "name": "[concat(parameters('appName'), '/web')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+        "[resourceId('Microsoft.Web/sites', parameters('appName'))]",
+        "[resourceId('Microsoft.Web/sites/basicPublishingCredentialsPolicies', parameters('appName'), 'scm')]"
       ],
       "properties": {
         "repoUrl": "[parameters('repoUrl')]",
         "branch": "[parameters('branch')]",
         "isManualIntegration": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2022-03-01",
+      "name": "[concat(parameters('appName'), '/scm')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+      ],
+      "properties": {
+        "allow": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2022-03-01",
+      "name": "[concat(parameters('appName'), '/ftp')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+      ],
+      "properties": {
+        "allow": true
       }
     },
     {

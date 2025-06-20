@@ -4,7 +4,7 @@
 [config]
 SCM_DO_BUILD_DURING_DEPLOYMENT=true
 ENABLE_ORYX_BUILD=true
-DISABLE_COLLECTSTATIC=1
+DISABLE_COLLECTSTATIC=true
 
 [build]
 # Python build configuration
