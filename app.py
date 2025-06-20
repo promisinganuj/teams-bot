@@ -49,6 +49,9 @@ def health_check():
 def messages():
     """Main bot endpoint for processing messages"""
     try:
+        logger.info(f"Received request: {request.method} {request.url}")
+        logger.info(f"Content-Type: {request.headers.get('Content-Type', 'Not set')}")
+        
         if "application/json" not in request.headers.get("Content-Type", ""):
             logger.error("Invalid content type")
             return Response(status=415)
@@ -58,32 +61,64 @@ def messages():
             logger.error("Empty request body")
             return Response(status=400)
 
+        logger.info(f"Request body: {body}")
+        
         activity = Activity().deserialize(body)
         auth_header = request.headers.get("Authorization", "")
+        
+        logger.info(f"Processing activity: {activity.type}")
 
         async def aux_func(turn_context):
-            await bot.on_turn(turn_context)
+            try:
+                # Use the ActivityHandler's on_turn method which will route to the appropriate handler
+                await bot.on_turn(turn_context)
+            except Exception as inner_e:
+                logger.error(f"Error in bot.on_turn: {str(inner_e)}", exc_info=True)
+                raise
 
-        task = adapter.process_activity(activity, auth_header, aux_func)
-        asyncio.run(task)
+        # Create new event loop for this request
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            task = adapter.process_activity(activity, auth_header, aux_func)
+            loop.run_until_complete(task)
+        finally:
+            loop.close()
         
+        logger.info("Message processed successfully")
         return Response(status=202)
         
     except Exception as e:
-        logger.error(f"Error processing message: {str(e)}")
+        logger.error(f"Error processing message: {str(e)}", exc_info=True)
         return Response(status=500)
 
 @app.route("/api/health", methods=["GET"])
 def detailed_health():
     """Detailed health check with bot status"""
     try:
+        # Test if imports work
+        import_status = {
+            "botbuilder": True,
+            "my_bot": True,
+            "flask": True
+        }
+        
+        try:
+            from botbuilder.core import ActivityHandler
+        except ImportError:
+            import_status["botbuilder"] = False
+            
+        try:
+            from my_bot import ProductivityBot
+        except ImportError:
+            import_status["my_bot"] = False
+
         return {
             "status": "healthy",
-            "timestamp": str(datetime.now().isoformat()),
+            "timestamp": str(datetime.now().isoformat()) if datetime else "N/A",
             "bot_configured": bool(APP_ID and APP_PASSWORD),
             "environment": os.environ.get("FLASK_ENV", "production"),
-            "app_id_configured": bool(APP_ID),
-            "app_password_configured": bool(APP_PASSWORD)
+            "imports": import_status
         }, 200
     except Exception as e:
         logger.error(f"Health check error: {e}")
