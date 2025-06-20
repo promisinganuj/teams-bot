@@ -361,18 +361,35 @@ curl https://your-app-name.azurewebsites.net/api/health
 
 After successful deployment, configure the Teams app:
 
-#### Automatic Upload (via CI/CD)
-The GitHub Actions workflow automatically uploads the Teams app manifest.
+#### Option A: Automatic Upload (via CI/CD)
+The GitHub Actions workflow attempts to automatically upload the Teams app manifest. If this fails due to permissions, use Option B.
 
-#### Manual Upload
-```bash
-python scripts/upload_manifest.py
-```
+#### Option B: Manual Upload (Recommended)
 
-#### Install in Teams
-1. Go to Microsoft Teams
-2. Apps → Manage Apps → Upload Custom App
-3. Select the uploaded bot
+**Download the App Package:**
+1. Go to your GitHub repository → Actions → Latest deployment run
+2. Scroll down to "Artifacts" section
+3. Download "teams-bot-app-package" 
+4. Extract the `teams-bot-app.zip` file
+
+**Upload to Teams:**
+1. Go to [Microsoft Teams Admin Center](https://admin.teams.microsoft.com)
+2. Navigate to **Teams apps** → **Manage apps**
+3. Click **"Upload new app"** → **"Upload"**
+4. Select the downloaded `teams-bot-app.zip` file
+5. Complete the upload process
+
+**Alternative - Upload via Teams Client:**
+1. Open Microsoft Teams desktop app
+2. Go to **Apps** → **Manage your apps** → **Upload an app**
+3. Select **"Upload a custom app"**
+4. Choose the `teams-bot-app.zip` file
+
+#### Install and Use the Bot
+1. After upload, the bot will appear in your organization's app catalog
+2. Click **"Add"** to install it
+3. Choose to add it to a team or use it personally
+4. Start chatting with the bot using commands like `help` or `calc 2+2`
 4. Add to team or use personally
 
 ### 🧪 Testing Your Deployment
