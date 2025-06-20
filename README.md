@@ -12,9 +12,15 @@ A comprehensive AI-powered Microsoft Teams bot that transforms your team's produ
 ### 📋 Prerequisites
 
 Before deploying, ensure you have:
-- Azure subscription with appropriate permissions
-- Microsoft Bot Framework App ID and Password
-- GitHub repository access (for CI/CD setup)
+- **Azure subscription** with appropriate permissions to create resources
+- **Microsoft Bot Framework App ID and Password** (explained in detail below)
+- **GitHub repository access** (for CI/CD setup)
+
+> **💡 What is Bot Framework App ID and Password?**
+> - **App ID**: A unique GUID that identifies your bot to Microsoft's Bot Framework service
+> - **App Password**: A secret key that authenticates your bot's requests to Microsoft services
+> - **Purpose**: These credentials allow your bot to send/receive messages through Microsoft Teams and other channels
+> - **Security**: The password is only shown once when created, so save it immediately!
 
 ### 🎯 Initial Deployment
 
@@ -211,13 +217,58 @@ After initial deployment, set up continuous deployment for ongoing updates:
 
 #### Step 1: Bot Framework Registration
 
-1. **Create Azure Bot Resource**
-   - Go to [Azure Portal](https://portal.azure.com)
-   - Create "Azure Bot" resource
-   - Note down `App ID` and create `App Secret`
-   - Set Messaging Endpoint: `https://your-app-name.azurewebsites.net/api/messages`
+The **Microsoft Bot Framework App ID and Password** are credentials that authenticate your bot with Microsoft's Bot Framework service. Here's how to get them:
 
-2. **Enable Teams Channel**
+1. **Create Azure Bot Resource**
+   
+   **Via Azure Portal:**
+   - Go to [Azure Portal](https://portal.azure.com)
+   - Click "Create a resource" → Search for "Azure Bot"
+   - Click "Create" and fill in:
+     - **Bot handle**: `teams-productivity-bot` (must be globally unique)
+     - **Subscription**: Select your Azure subscription
+     - **Resource group**: Create new or use existing
+     - **Pricing tier**: F0 (free) for development
+     - **Microsoft App ID**: Select "Create new Microsoft App ID"
+   - Click "Create"
+
+   **Via Azure CLI:**
+   ```bash
+   # Create resource group
+   az group create --name rg-teams-bot --location australiaeast
+   
+   # Create bot registration
+   az bot create --resource-group rg-teams-bot \
+     --name teams-productivity-bot \
+     --kind registration \
+     --sku F0 \
+     --appid $(uuidgen) \
+     --password $(openssl rand -base64 32)
+   ```
+
+2. **Get App ID and Create App Secret**
+   
+   **Get App ID:**
+   - In Azure Portal, go to your Bot resource
+   - Under "Settings" → "Configuration"
+   - Copy the **Microsoft App ID** (GUID format: `12345678-1234-1234-1234-123456789012`)
+   
+   **Create App Secret:**
+   - In the same Configuration page, click "Manage" next to Microsoft App ID
+   - This opens Azure AD App Registration
+   - Go to "Certificates & secrets" → "Client secrets"
+   - Click "New client secret"
+   - Add description: "Teams Bot Secret"
+   - Set expiration (24 months recommended)
+   - Click "Add" and **immediately copy the secret value** (you won't see it again!)
+
+3. **Configure Bot Endpoint**
+   - Back in your Bot resource, under "Settings" → "Configuration"
+   - Set **Messaging endpoint**: `https://your-app-name.azurewebsites.net/api/messages`
+   - Replace `your-app-name` with your actual Azure App Service name
+   - Click "Apply"
+
+4. **Enable Teams Channel**
    - In Bot resource → Channels
    - Add Microsoft Teams channel
    - Configure and save
@@ -245,15 +296,15 @@ After initial deployment, set up continuous deployment for ongoing updates:
    
    **Required Secrets:**
 
-   | Secret | Description | Example |
-   |--------|-------------|---------|
-   | `AZURE_WEBAPP_NAME` | Name of your Azure Web App | `teams-productivity-bot` |
-   | `AZURE_WEBAPP_PUBLISH_PROFILE` | Azure publish profile XML | `<publishData>...</publishData>` |
-   | `BOT_APP_ID` | Microsoft Bot Framework App ID | `12345678-1234-1234-1234-123456789012` |
-   | `BOT_APP_PASSWORD` | Microsoft Bot Framework App Secret | `your-bot-app-secret` |
-   | `TENANT_ID` | Azure AD Tenant ID | `your-azure-tenant-id` |
-   | `GRAPH_CLIENT_ID` | Microsoft Graph App ID | `your-graph-app-id` |
-   | `GRAPH_CLIENT_SECRET` | Microsoft Graph App Secret | `your-graph-app-secret` |
+   | Secret | Description | Example | Where to Find |
+   |--------|-------------|---------|---------------|
+   | `AZURE_WEBAPP_NAME` | Name of your Azure Web App | `teams-productivity-bot` | Azure Portal → App Service name |
+   | `AZURE_WEBAPP_PUBLISH_PROFILE` | Azure publish profile XML | `<publishData>...</publishData>` | Azure Portal → App Service → Get publish profile |
+   | `BOT_APP_ID` | Microsoft Bot Framework App ID | `12345678-1234-1234-1234-123456789012` | Azure Portal → Bot resource → Configuration |
+   | `BOT_APP_PASSWORD` | Microsoft Bot Framework App Secret | `abc123XYZ_secret_value` | Azure AD → App registrations → Certificates & secrets |
+   | `TENANT_ID` | Azure AD Tenant ID | `87654321-4321-4321-4321-210987654321` | Azure Portal → Azure Active Directory → Properties |
+   | `GRAPH_CLIENT_ID` | Microsoft Graph App ID | `11111111-2222-3333-4444-555555555555` | Azure AD → App registrations (same as BOT_APP_ID) |
+   | `GRAPH_CLIENT_SECRET` | Microsoft Graph App Secret | `def456ABC_graph_secret` | Azure AD → App registrations → Certificates & secrets |
 
 #### Step 3: Enable Automated Deployment
 
