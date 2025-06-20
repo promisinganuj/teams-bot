@@ -117,7 +117,25 @@ def upload_app_package(token, package_path):
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to upload app package: {e}")
         if hasattr(e, 'response') and e.response is not None:
-            logger.error(f"Response: {e.response.text}")
+            error_response = e.response.text
+            logger.error(f"Response: {error_response}")
+            
+            # Check for specific permission errors
+            if "AppCatalog.ReadWrite.All" in error_response:
+                logger.error("\n🚨 PERMISSION ERROR DETECTED:")
+                logger.error("The Azure AD app registration is missing required permissions.")
+                logger.error("\n📋 TO FIX THIS:")
+                logger.error("1. Go to Azure Portal → Azure Active Directory → App registrations")
+                logger.error("2. Find your bot's app registration")
+                logger.error("3. Go to 'API permissions' → 'Add a permission'")
+                logger.error("4. Select 'Microsoft Graph' → 'Application permissions'")
+                logger.error("5. Add 'AppCatalog.ReadWrite.All' permission")
+                logger.error("6. Click 'Grant admin consent' (requires admin privileges)")
+                logger.error("\n🔄 ALTERNATIVE:")
+                logger.error("If you can't get admin consent, manually upload the Teams app:")
+                logger.error("- Download the app package from GitHub Actions artifacts")
+                logger.error("- Go to Teams Admin Center → Teams apps → Upload custom app")
+                
         sys.exit(1)
 
 def main():
