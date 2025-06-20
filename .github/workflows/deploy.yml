@@ -89,14 +89,32 @@ jobs:
 
     - name: Upload Teams App Manifest
       if: success()
-      run: |
-        python scripts/upload_manifest.py
+      continue-on-error: true  # Don't fail the entire workflow if upload fails
+      run: python scripts/upload_manifest.py
       env:
         TENANT_ID: ${{ secrets.TENANT_ID }}
         CLIENT_ID: ${{ secrets.GRAPH_CLIENT_ID }}
         CLIENT_SECRET: ${{ secrets.GRAPH_CLIENT_SECRET }}
         BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
         AZURE_WEBAPP_DOMAIN: ${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net
+
+    - name: Create Teams App Package for Manual Upload
+      if: always()  # Always create package even if automatic upload fails
+      run: |
+        mkdir -p teams-app-package
+        cp teams_app/manifest.json teams-app-package/
+        cp teams_app/*.png teams-app-package/ 2>/dev/null || true
+        sed -i.bak "s/{{BOT_APP_ID}}/${{ secrets.BOT_APP_ID }}/g" teams-app-package/manifest.json
+        sed -i.bak "s/{{AZURE_WEBAPP_DOMAIN}}/${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net/g" teams-app-package/manifest.json
+        cd teams-app-package && zip -r ../teams-bot-app.zip .
+
+    - name: Upload Teams App Package as Artifact
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: teams-bot-app-package
+        path: teams-bot-app.zip
+        retention-days: 30
 
   terraform:
     name: Terraform Plan/Apply
