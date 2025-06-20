@@ -1,0 +1,15 @@
+# Azure Web App deployment configuration
+# This file configures the Azure App Service deployment
+
+[config]
+SCM_DO_BUILD_DURING_DEPLOYMENT=true
+ENABLE_ORYX_BUILD=true
+DISABLE_COLLECTSTATIC=1
+
+[build]
+# Python build configuration
+python_version=3.11
+
+[startup]
+# Startup command for Azure App Service
+command=gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 app:app
