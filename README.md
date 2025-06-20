@@ -2,7 +2,7 @@
 
 A comprehensive AI-powered Microsoft Teams bot that transforms your team's productivity. Built with Python Flask and the Bot Framework SDK, featuring advanced calculator, weather information, task management, and much more!
 
-[![Deploy to Azure](https://github.com/yourusername/teams-bot/workflows/Deploy%20Teams%20Bot%20to%20Azure/badge.svg)](https://github.com/yourusername/teams-bot/actions)
+[![Deploy to Azure](https://github.com/yourusername/teams-bot/workflows/Deploy%20Teams%20Bot%20to%20Azure/badge.svg)](https://github.com/promisinganuj/teams-bot/actions)
 
 ## ✨ Features
 
