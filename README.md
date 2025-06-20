@@ -7,30 +7,41 @@ A comprehensive AI-powered Microsoft Teams bot that transforms your team's produ
 
 > **Note**: The Deploy to Azure button will work once the ARM template (`azure-deploy.json`) is committed to the main branch of this repository.
 
-## 🚀 Quick Deploy Options
+## 🚀 Deployment Guide
 
-### Option 1: One-Click Azure Deployment
+### 📋 Prerequisites
+
+Before deploying, ensure you have:
+
+- **Azure subscription** with appropriate permissions to create resources
+- **Microsoft Bot Framework App ID and Password** (explained in detail below)
+- **GitHub repository access** (for CI/CD setup)
+
+> **💡 What is Bot Framework App ID and Password?**
+> - **App ID**: A unique GUID that identifies your bot to Microsoft's Bot Framework service
+> - **App Password**: A secret key that authenticates your bot's requests to Microsoft services
+> - **Purpose**: These credentials allow your bot to send/receive messages through Microsoft Teams and other channels
+> - **Security**: The password is only shown once when created, so save it immediately!
+
+### 🎯 Initial Deployment
+
+Choose your preferred deployment method:
+
+#### Option A: One-Click Azure Deployment (Recommended)
 
 **🔄 Status**: Available after ARM template is pushed to repository
 
-Once the Azure ARM template is available in the repository, you can use the one-click deployment:
-
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fpromisinganuj%2Fteams-bot%2Fmain%2Fazure-deploy.json)
 
-**What this does:**
-- ✅ Creates Azure App Service with Python 3.11
-- ✅ Deploys the bot code automatically
-- ✅ Configures all necessary settings
-- ✅ Sets up Application Insights monitoring
+**What this creates:**
+- ✅ Azure App Service with Python 3.11
+- ✅ Application Insights monitoring
+- ✅ All necessary configurations
+- ✅ Automatic code deployment
 
-**You'll need:**
-- Azure subscription
-- Bot Framework App ID and Password
-- 5 minutes of your time
+#### Option B: Manual ARM Template Deployment
 
-### Option 1.5: Manual ARM Template Deployment
-
-If the one-click button doesn't work, you can deploy manually:
+If the one-click button doesn't work:
 
 1. **Download the ARM template**
    ```bash
@@ -49,11 +60,16 @@ If the one-click button doesn't work, you can deploy manually:
      --parameters botAppPassword="YOUR_BOT_PASSWORD"
    ```
 
-### Option 2: GitHub Actions CI/CD
-Use the automated pipeline for continuous deployment (see deployment guide below).
+#### Option C: Interactive Deployment Script
 
-### Option 3: Manual Deployment
-Use the helper script: `./scripts/deploy-azure.sh`
+Use the helper script for guided deployment:
+```bash
+./scripts/deploy-azure.sh
+```
+
+### 🔄 Setting up CI/CD
+
+After initial deployment, set up continuous deployment for ongoing updates:
 
 ## ✨ Features
 
@@ -200,11 +216,127 @@ Use the helper script: `./scripts/deploy-azure.sh`
 | `menu` | Interactive menu | `menu` |
 | `hi` / `hello` | Welcome message | `hello` |
 
-## ☁️ Azure Deployment
+#### Step 1: Bot Framework Registration
 
-### Infrastructure Setup
+The **Microsoft Bot Framework App ID and Password** are credentials that authenticate your bot with Microsoft's Bot Framework service. Here's how to get them:
 
-1. **Configure Terraform variables**
+1. **Create Azure Bot Resource**
+   
+   **Via Azure Portal:**
+   - Go to [Azure Portal](https://portal.azure.com)
+   - Click "Create a resource" → Search for "Azure Bot"
+   - Click "Create" and fill in:
+     - **Bot handle**: `teams-productivity-bot` (must be globally unique)
+     - **Subscription**: Select your Azure subscription
+     - **Resource group**: Create new or use existing
+     - **Pricing tier**: F0 (free) for development
+     - **Microsoft App ID**: Select "Create new Microsoft App ID"
+   - Click "Create"
+
+   **Via Azure CLI:**
+   ```bash
+   # Create resource group
+   az group create --name rg-teams-bot --location australiaeast
+   
+   # Create bot registration
+   az bot create --resource-group rg-teams-bot \
+     --name teams-productivity-bot \
+     --kind registration \
+     --sku F0 \
+     --appid $(uuidgen) \
+     --password $(openssl rand -base64 32)
+   ```
+
+2. **Get App ID and Create App Secret**
+   
+   **Get App ID:**
+   - In Azure Portal, go to your Bot resource
+   - Under "Settings" → "Configuration"
+   - Copy the **Microsoft App ID** (GUID format: `12345678-1234-1234-1234-123456789012`)
+   
+   **Create App Secret:**
+   - In the same Configuration page, click "Manage" next to Microsoft App ID
+   - This opens Azure AD App Registration
+   - Go to "Certificates & secrets" → "Client secrets"
+   - Click "New client secret"
+   - Add description: "Teams Bot Secret"
+   - Set expiration (24 months recommended)
+   - Click "Add" and **immediately copy the secret value** (you won't see it again!)
+
+3. **Configure Bot Endpoint**
+   - Back in your Bot resource, under "Settings" → "Configuration"
+   - Set **Messaging endpoint**: `https://your-app-name.azurewebsites.net/api/messages`
+   - Replace `your-app-name` with your actual Azure App Service name
+   - Click "Apply"
+
+4. **Enable Teams Channel**
+   - In Bot resource → Channels
+   - Add Microsoft Teams channel
+   - Configure and save
+
+#### Step 2: Configure GitHub Repository
+
+1. **Fork/Clone Repository**
+   ```bash
+   git clone https://github.com/promisinganuj/teams-bot.git
+   cd teams-bot
+   ```
+
+2. **Get Azure Publish Profile**
+   ```bash
+   # Download from Azure Portal or use CLI
+   az webapp deployment list-publishing-profiles \
+     --name teams-productivity-bot \
+     --resource-group rg-teams-bot \
+     --xml
+   ```
+
+3. **Configure GitHub Secrets**
+   
+   Go to GitHub Repository → Settings → Secrets and Variables → Actions
+   
+   **Required Secrets:**
+
+   | Secret | Description | Example | Where to Find |
+   |--------|-------------|---------|---------------|
+   | `AZURE_WEBAPP_NAME` | Name of your Azure Web App | `teams-productivity-bot` | Azure Portal → App Service name |
+   | `AZURE_WEBAPP_PUBLISH_PROFILE` | Azure publish profile XML | `<publishData>...</publishData>` | Azure Portal → App Service → Get publish profile |
+   | `BOT_APP_ID` | Microsoft Bot Framework App ID | `12345678-1234-1234-1234-123456789012` | Azure Portal → Bot resource → Configuration |
+   | `BOT_APP_PASSWORD` | Microsoft Bot Framework App Secret | `abc123XYZ_secret_value` | Azure AD → App registrations → Certificates & secrets |
+   | `TENANT_ID` | Azure AD Tenant ID | `87654321-4321-4321-4321-210987654321` | Azure Portal → Azure Active Directory → Properties |
+   | `GRAPH_CLIENT_ID` | Microsoft Graph App ID | `11111111-2222-3333-4444-555555555555` | Azure AD → App registrations (same as BOT_APP_ID) |
+   | `GRAPH_CLIENT_SECRET` | Microsoft Graph App Secret | `def456ABC_graph_secret` | Azure AD → App registrations → Certificates & secrets |
+
+#### Step 3: Enable Automated Deployment
+
+1. **Trigger First Deployment**
+   ```bash
+   # Push to main branch triggers CI/CD pipeline
+   git add .
+   git commit -m "Enable CI/CD deployment"
+   git push origin main
+   ```
+
+2. **Monitor Deployment**
+   - Go to GitHub Repository → Actions
+   - Watch the "Deploy Teams Bot to Azure" workflow
+   - Verify each step: Test → Build → Deploy → Upload Manifest
+
+#### Step 4: Verify Deployment
+
+```bash
+# Check health endpoint
+curl https://your-app-name.azurewebsites.net/api/health
+
+# Should return:
+# {"status": "healthy", "service": "teams-productivity-bot", "version": "2.0.0"}
+```
+
+### 🔧 Alternative Deployment Methods
+
+#### Using Terraform (Infrastructure as Code)
+
+1. **Configure variables**
    ```bash
    cd infra
    cp terraform.tfvars.example terraform.tfvars
@@ -215,127 +347,25 @@ Use the helper script: `./scripts/deploy-azure.sh`
    ```bash
    terraform init
    terraform plan
-   terraform apply
-   ```
+### 📱 Teams App Setup
 
-### CI/CD Setup
+After successful deployment, configure the Teams app:
 
-Configure GitHub Secrets:
+#### Automatic Upload (via CI/CD)
+The GitHub Actions workflow automatically uploads the Teams app manifest.
 
-| Secret | Description |
-|--------|-------------|
-| `AZURE_WEBAPP_NAME` | Name of your Azure Web App |
-| `AZURE_WEBAPP_PUBLISH_PROFILE` | Azure publish profile |
-| `BOT_APP_ID` | Microsoft Bot Framework App ID |
-| `BOT_APP_PASSWORD` | Microsoft Bot Framework App Secret |
-| `TENANT_ID` | Azure AD Tenant ID |
-| `GRAPH_CLIENT_ID` | Microsoft Graph App ID |
-| `GRAPH_CLIENT_SECRET` | Microsoft Graph App Secret |
-| `AZURE_CREDENTIALS` | Azure service principal credentials |
+#### Manual Upload
+```bash
+python scripts/upload_manifest.py
+```
 
-### 🚀 Complete Deployment Guide
+#### Install in Teams
+1. Go to Microsoft Teams
+2. Apps → Manage Apps → Upload Custom App
+3. Select the uploaded bot
+4. Add to team or use personally
 
-#### **Step 1: Azure Prerequisites**
-
-1. **Create Azure Resources** (via Azure Portal or Terraform)
-   ```bash
-   # Option A: Use Terraform (Recommended)
-   cd infra
-   terraform init
-   terraform apply -var="resource_group_name=rg-teams-bot" \
-                   -var="bot_app_id=YOUR_BOT_APP_ID" \
-                   -var="bot_app_password=YOUR_BOT_PASSWORD"
-   
-   # Option B: Use Azure CLI
-   az group create --name rg-teams-bot --location australiaeast
-   az appservice plan create --name plan-teams-bot --resource-group rg-teams-bot --sku B1 --is-linux
-   az webapp create --name teams-productivity-bot --resource-group rg-teams-bot --plan plan-teams-bot --runtime "PYTHON:3.11"
-   ```
-
-2. **Get Publish Profile**
-   ```bash
-   # Download publish profile from Azure Portal or CLI
-   az webapp deployment list-publishing-profiles --name teams-productivity-bot --resource-group rg-teams-bot --xml
-   ```
-
-#### **Step 2: Bot Framework Setup**
-
-1. **Register Bot in Azure**
-   - Go to [Azure Portal](https://portal.azure.com)
-   - Create "Azure Bot" resource
-   - Note down `App ID` and create `App Secret`
-   - Set Messaging Endpoint: `https://your-app-name.azurewebsites.net/api/messages`
-
-2. **Enable Teams Channel**
-   - In Bot resource → Channels
-   - Add Microsoft Teams channel
-   - Configure and save
-
-#### **Step 3: GitHub Repository Setup**
-
-1. **Fork/Clone Repository**
-   ```bash
-   git clone https://github.com/promisinganuj/teams-bot.git
-   cd teams-bot
-   ```
-
-2. **Configure GitHub Secrets**
-   
-   Go to GitHub Repository → Settings → Secrets and Variables → Actions
-   
-   **Required Secrets:**
-   ```
-   AZURE_WEBAPP_NAME=teams-productivity-bot
-   AZURE_WEBAPP_PUBLISH_PROFILE=<paste-publish-profile-xml>
-   BOT_APP_ID=12345678-1234-1234-1234-123456789012
-   BOT_APP_PASSWORD=your-bot-app-secret
-   TENANT_ID=your-azure-tenant-id
-   GRAPH_CLIENT_ID=your-graph-app-id  
-   GRAPH_CLIENT_SECRET=your-graph-app-secret
-   ```
-
-#### **Step 4: Deployment Process**
-
-The deployment is **completely automated** via GitHub Actions:
-
-1. **Trigger Deployment**
-   ```bash
-   # Push to main branch triggers deployment
-   git add .
-   git commit -m "Deploy enhanced bot"
-   git push origin main
-   ```
-
-2. **Monitor Deployment**
-   - Go to GitHub Repository → Actions
-   - Watch the "Deploy Teams Bot to Azure" workflow
-   - Check each step: Test → Build → Deploy → Upload Manifest
-
-3. **Verify Deployment**
-   ```bash
-   # Check if app is running
-   curl https://your-app-name.azurewebsites.net/
-   
-   # Should return:
-   # {"status": "healthy", "service": "teams-productivity-bot", "version": "2.0.0"}
-   ```
-
-#### **Step 5: Teams App Setup**
-
-1. **Upload to Teams**
-   
-   The GitHub Action automatically uploads the Teams app, or manually:
-   ```bash
-   python scripts/upload_manifest.py
-   ```
-
-2. **Install in Teams**
-   - Go to Microsoft Teams
-   - Apps → Manage Apps → Upload Custom App
-   - Select the uploaded bot
-   - Add to team or use personally
-
-#### **Step 6: Testing**
+### 🧪 Testing Your Deployment
 
 Test all bot features in Teams:
 ```
@@ -350,73 +380,37 @@ pick Alice, Bob, Charlie    # Random selection
 help                        # Complete guide
 ```
 
-### 🔧 **Troubleshooting Deployment**
+### 🔧 Troubleshooting
 
-#### **Common Issues & Solutions**
+#### Common Issues & Solutions
 
-1. **❌ GitHub Action Fails**
-   ```bash
-   # Check secrets are correctly set
-   # Verify Azure resource names match
-   # Ensure publish profile is valid XML
-   ```
+**❌ GitHub Action Fails**
+- Verify all GitHub secrets are correctly set
+- Check Azure resource names match configuration
+- Ensure publish profile is valid XML format
 
-2. **❌ Bot Not Responding**
-   ```bash
-   # Check Azure App Service logs
-   az webapp log tail --name teams-productivity-bot --resource-group rg-teams-bot
-   
-   # Verify bot endpoint in Azure Bot resource
-   # Ensure MicrosoftAppId/Password are correct
-   ```
-
-3. **❌ Teams Manifest Upload Fails**
-   ```bash
-   # Verify Microsoft Graph API permissions
-   # Check tenant ID and app registration
-   # Ensure manifest.json is valid
-   ```
-
-4. **❌ Dependencies Missing**
-   ```bash
-   # Check requirements.txt includes all packages
-   # Verify Python version is 3.11
-   # Check Azure build logs for errors
-   ```
-
-### 📊 **Deployment Status Check**
-
-After deployment, verify everything works:
-
+**❌ Bot Not Responding**
 ```bash
-# 1. Health Check
-curl https://your-app-name.azurewebsites.net/api/health
+# Check Azure App Service logs
+az webapp log tail --name teams-productivity-bot --resource-group rg-teams-bot
 
-# 2. Test Bot Endpoint (requires proper headers)
-curl -X POST https://your-app-name.azurewebsites.net/api/messages \
-     -H "Content-Type: application/json" \
-     -d '{"type":"message","text":"hello"}'
-
-# 3. Check Azure Logs
-az webapp log tail --name your-app-name --resource-group your-rg
+# Verify bot endpoint in Azure Bot resource
+# Ensure MicrosoftAppId/Password are correct
 ```
 
-### 🎯 **Production Considerations**
+**❌ Teams Manifest Upload Fails**
+- Verify Microsoft Graph API permissions
+- Check tenant ID and app registration
+- Ensure manifest.json is valid JSON
 
-1. **Security**
-   - Store secrets in Azure Key Vault
-   - Enable HTTPS only
-   - Configure CORS if needed
+**❌ Deployment Status Check**
+```bash
+# Health check
+curl https://your-app-name.azurewebsites.net/api/health
 
-2. **Performance** 
-   - Scale up App Service plan for production
-   - Enable Application Insights monitoring
-   - Set up alerts for failures
-
-3. **Database**
-   - Replace in-memory task storage with Azure SQL/CosmosDB
-   - Implement proper data persistence
-   - Add data backup strategies
+# Check Azure logs
+az webapp log tail --name your-app-name --resource-group your-rg
+```
 
 ## 📁 Project Structure
 
