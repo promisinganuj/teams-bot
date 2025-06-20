@@ -12,6 +12,7 @@ A comprehensive AI-powered Microsoft Teams bot that transforms your team's produ
 ### 📋 Prerequisites
 
 Before deploying, ensure you have:
+
 - **Azure subscription** with appropriate permissions to create resources
 - **Microsoft Bot Framework App ID and Password** (explained in detail below)
 - **GitHub repository access** (for CI/CD setup)
