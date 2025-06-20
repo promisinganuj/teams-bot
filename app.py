@@ -4,6 +4,7 @@ from botbuilder.schema import Activity
 import asyncio
 import os
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 from my_bot import ProductivityBot
 
@@ -75,12 +76,18 @@ def messages():
 @app.route("/api/health", methods=["GET"])
 def detailed_health():
     """Detailed health check with bot status"""
-    return {
-        "status": "healthy",
-        "timestamp": str(asyncio.get_event_loop().time() if asyncio.get_event_loop().is_running() else "N/A"),
-        "bot_configured": bool(APP_ID and APP_PASSWORD),
-        "environment": os.environ.get("FLASK_ENV", "production")
-    }, 200
+    try:
+        return {
+            "status": "healthy",
+            "timestamp": str(datetime.now().isoformat()),
+            "bot_configured": bool(APP_ID and APP_PASSWORD),
+            "environment": os.environ.get("FLASK_ENV", "production"),
+            "app_id_configured": bool(APP_ID),
+            "app_password_configured": bool(APP_PASSWORD)
+        }, 200
+    except Exception as e:
+        logger.error(f"Health check error: {e}")
+        return {"status": "error", "message": str(e)}, 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
