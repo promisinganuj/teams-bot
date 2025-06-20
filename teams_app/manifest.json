@@ -15,12 +15,12 @@
     "outline": "outline.png"
   },
   "name": {
-    "short": "AddBot",
-    "full": "Teams Addition Calculator Bot"
+    "short": "ProductivityBot",
+    "full": "AI-Powered Teams Productivity Assistant"
   },
   "description": {
-    "short": "Simple bot that adds two numbers",
-    "full": "A helpful bot that can add two numbers together. Just type 'add 5 3' and get instant results!"
+    "short": "AI-powered productivity bot with calculator, weather, tasks & more",
+    "full": "Your AI-powered productivity assistant for Microsoft Teams! Features advanced calculator, weather information, task management, QR code generation, password creation, polls, and fun commands. Boost your team's productivity with this comprehensive bot."
   },
   "accentColor": "#FFFFFF",
   "bots": [
@@ -35,15 +35,51 @@
       "isNotificationOnly": false,
       "commandLists": [
         {
-          "scopes": ["personal", "team", "groupchat"],
+          "scopes": [
+            "personal",
+            "team",
+            "groupchat"
+          ],
           "commands": [
             {
-              "title": "Add Numbers",
-              "description": "Add two numbers together (e.g., 'add 5 3')"
+              "title": "Calculator",
+              "description": "Advanced calculator (e.g., 'calc 2^3 + sqrt(16)')"
+            },
+            {
+              "title": "Weather",
+              "description": "Get weather info (e.g., 'weather Sydney')"
+            },
+            {
+              "title": "Tasks",
+              "description": "Manage your tasks (e.g., 'task add Buy groceries')"
+            },
+            {
+              "title": "Fun",
+              "description": "Get jokes and quotes (e.g., 'joke' or 'quote')"
+            },
+            {
+              "title": "QR Code",
+              "description": "Generate QR codes (e.g., 'qr https://example.com')"
+            },
+            {
+              "title": "Password",
+              "description": "Generate secure passwords (e.g., 'password 16')"
+            },
+            {
+              "title": "Poll",
+              "description": "Create polls (e.g., 'poll Question? Option1, Option2')"
+            },
+            {
+              "title": "Random Pick",
+              "description": "Random selection (e.g., 'pick Alice, Bob, Charlie')"
             },
             {
               "title": "Help",
-              "description": "Show help and available commands"
+              "description": "Show all available commands and usage examples"
+            },
+            {
+              "title": "Menu",
+              "description": "Interactive menu with quick access to features"
             }
           ]
         }
