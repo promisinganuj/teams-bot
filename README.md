@@ -263,6 +263,16 @@ The **Microsoft Bot Framework App ID and Password** are credentials that authent
    - Set expiration (24 months recommended)
    - Click "Add" and **immediately copy the secret value** (you won't see it again!)
 
+   **Add Microsoft Graph API Permissions (Required for Teams App Upload):**
+   - In the same Azure AD App Registration, go to "API permissions"
+   - Click "Add a permission" → "Microsoft Graph" → "Application permissions"
+   - Search and select: `AppCatalog.ReadWrite.All`
+   - Click "Add permissions"
+   - Click "Grant admin consent for [Your Organization]" (requires admin rights)
+   - Wait for status to show "Granted for [Your Organization]"
+
+   > **⚠️ Important**: Without `AppCatalog.ReadWrite.All` permission, the Teams app upload will fail with "403 Forbidden" error.
+
 3. **Configure Bot Endpoint**
    - Back in your Bot resource, under "Settings" → "Configuration"
    - Set **Messaging endpoint**: `https://your-app-name.azurewebsites.net/api/messages`
@@ -410,6 +420,34 @@ az webapp config set --resource-group <your-rg> --name <your-app> --basic-auth-e
 az resource update --resource-group <your-rg> --name scm --namespace Microsoft.Web \
   --resource-type basicPublishingCredentialsPolicies --parent sites/<your-app> \
   --set properties.allow=true
+```
+
+**❌ "Missing role permissions: AppCatalog.ReadWrite.All" Error**
+
+This occurs when trying to upload Teams app manifest without proper Graph API permissions.
+
+**Solution:**
+1. **Via Azure Portal**:
+   - Go to Azure AD → App registrations → Your bot app
+   - Navigate to "API permissions"
+   - Click "Add a permission" → Microsoft Graph → Application permissions
+   - Add `AppCatalog.ReadWrite.All`
+   - Click "Grant admin consent" (requires admin privileges)
+
+2. **Alternative: Manual Teams App Upload**:
+   ```bash
+   # If you can't get admin consent, upload manually to Teams
+   # 1. Download the app package from GitHub Actions artifacts
+   # 2. Go to Teams Admin Center → Teams apps → Manage apps
+   # 3. Click "Upload new app" → Upload custom app
+   ```
+
+**❌ "Icon not found" Warning**
+
+**Solution:**
+```bash
+# Icons are now included in the repository
+# If missing, they'll be created automatically during deployment
 ```
 
 **❌ GitHub Action Fails**
