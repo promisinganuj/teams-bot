@@ -143,9 +143,10 @@ def messages():
         return Response(status=202)
         
     except Exception as e:
-        logger.error(f"Error processing message: {str(e)}", exc_info=True)
+        error_msg = f"Error processing message: {str(e)}"
+        logger.error(error_msg, exc_info=True)
         logger.error(f"Full traceback: {traceback.format_exc()}")
-        return Response(f"Error: {str(e)}", status=500)
+        return Response(error_msg, status=500)
 
 @app.route("/api/health", methods=["GET"])
 def detailed_health():
