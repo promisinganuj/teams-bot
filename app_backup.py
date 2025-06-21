@@ -24,19 +24,9 @@ if not APP_ID and not APP_PASSWORD:
     logger.warning("Bot credentials not configured - running in development mode")
 
 app = Flask(__name__)
-
-# Initialize bot components with error handling
-try:
-    adapter_settings = BotFrameworkAdapterSettings(APP_ID, APP_PASSWORD)
-    adapter = BotFrameworkAdapter(adapter_settings)
-    bot = ProductivityBot()
-    logger.info("Bot initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize bot: {e}")
-    # Create minimal adapter for testing
-    adapter_settings = BotFrameworkAdapterSettings("", "")
-    adapter = BotFrameworkAdapter(adapter_settings)
-    bot = None
+adapter_settings = BotFrameworkAdapterSettings(APP_ID, APP_PASSWORD)
+adapter = BotFrameworkAdapter(adapter_settings)
+bot = ProductivityBot()
 
 @app.route("/", methods=["GET"])
 def health_check():
@@ -80,11 +70,6 @@ def messages():
 
         async def aux_func(turn_context):
             try:
-                if bot is None:
-                    logger.error("Bot not initialized")
-                    await turn_context.send_activity("Bot is not properly configured")
-                    return
-                
                 # Use the ActivityHandler's on_turn method which will route to the appropriate handler
                 await bot.on_turn(turn_context)
             except Exception as inner_e:
