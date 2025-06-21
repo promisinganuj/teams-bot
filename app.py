@@ -144,9 +144,16 @@ def messages():
         
     except Exception as e:
         error_msg = f"Error processing message: {str(e)}"
+        traceback_msg = traceback.format_exc()
         logger.error(error_msg, exc_info=True)
-        logger.error(f"Full traceback: {traceback.format_exc()}")
-        return Response(error_msg, status=500)
+        logger.error(f"Full traceback: {traceback_msg}")
+        
+        # Return the error in the response for debugging
+        return Response(
+            f"DEBUG ERROR: {error_msg}\n\nTRACEBACK:\n{traceback_msg}", 
+            status=500, 
+            content_type='text/plain'
+        )
 
 @app.route("/api/health", methods=["GET"])
 def detailed_health():
